@@ -23,7 +23,7 @@ public:
 		else {
 			// ray is outside the sphere
 			this->normal = outwardNormal;
-			this->frontFace = true;
+			this->frontFace = true; 
 		}
 	}
 };
