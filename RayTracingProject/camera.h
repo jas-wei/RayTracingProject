@@ -1,7 +1,7 @@
 #pragma once
 
 #include "main.h"
-//#include "ray.h"
+#include "interval.h"
 
 #include <iostream>
 #include <memory>
@@ -14,6 +14,7 @@ public:
 	double viewportHeight = 2.0;
 	point3 cameraPosition = point3(0, 0, 0);
 	double focalLength = 1.0;
+	int samples = 10;
 
 
 	camera() {}
@@ -37,10 +38,19 @@ public:
 					+ (pixel_delta_u * i)
 					+ (pixel_delta_v * j);
 
-				ray r = getRay(pixelCenter, cameraPosition);
+				double pixelWidth = pixel_delta_u.length();
+				double pixelHeight = pixel_delta_v.length();
 
-				color pixel_color = rayColor(r, hittableObject);
-				write_color(std::cout, pixel_color);
+				color avgColor = color(0, 0, 0);
+				for (int k = 0; k < samples; k++) {
+					point3 pixelSample = samplePixel(pixelCenter);
+					ray r = getRay(pixelSample);
+					color pixel_color = rayColor(r, hittableObject);
+
+					avgColor += pixel_color;
+				}
+				avgColor /= double(samples);
+				write_color(std::cout, avgColor);
 			}
 		}
 
@@ -85,10 +95,19 @@ private:
 			+ (pixel_delta_v / 2);
 	}
 
-	ray getRay(const point3& pixelCenter, const point3& cameraCenter) {
+	point3 samplePixel(const point3& pixelCenter) const {
+		double randomU = getRandomDouble(-0.5, 0.5);
+		double randomV = getRandomDouble(-0.5, 0.5);
+
+		return pixelCenter
+			+ randomU * pixel_delta_u
+			+ randomV * pixel_delta_v;
+	}
+
+	ray getRay(const point3& pixelCenter) {
 		// Create ray from camera through pixel
-		auto rayDirection = pixelCenter - cameraCenter;
-		ray r = ray(cameraCenter, rayDirection);
+		auto rayDirection = pixelCenter - cameraPosition;
+		ray r = ray(cameraPosition, rayDirection);
 		return r;
 	}
 

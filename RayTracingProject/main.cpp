@@ -48,6 +48,7 @@ void rayTrace() {
 	camera.imageWidth = 400;
 	camera.viewportHeight = 2.0;
 	camera.focalLength = 1.0;
+	camera.samples = 100;
 
 	// test if the ray intersects with the sphere
 	std::shared_ptr<sphere> sphereObject1 = std::make_shared<sphere>(point3(0, 0, -1), 0.5);

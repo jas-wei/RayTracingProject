@@ -7,7 +7,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-
+#include <cstdlib>
 
 // C++ Std Usings
 
@@ -21,9 +21,18 @@ const double pi = 3.1415926535897932385;
 
 // Utility Functions
 
-inline double degrees_to_radians(double degrees) {
+inline double degreesToRadians(double degrees) {
     return degrees * pi / 180.0;
 }
+
+inline double getRandomDouble() {
+    return std::rand()/ (RAND_MAX + 1.0);
+}
+
+inline double getRandomDouble(double min, double max) {
+    return (max - min) * getRandomDouble() + min;
+}
+
 
 // Common Headers
 
