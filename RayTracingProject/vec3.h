@@ -2,6 +2,7 @@
 #ifndef VEC3_H
 #define VEC3_H
 
+#include "interval.h"
 
 class vec3 {
 public:
@@ -42,6 +43,16 @@ public:
 
     double length_squared() const {
         return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
+    }
+
+    // vector entries are between 0 and 1
+    static vec3 random() {
+        return vec3(getRandomDouble(), getRandomDouble(), getRandomDouble());
+    }
+
+    // vector entries are between min and max
+    static vec3 random(double min, double max) {
+        return vec3(getRandomDouble(min, max), getRandomDouble(min, max), getRandomDouble(min, max));
     }
 };
 
@@ -93,6 +104,28 @@ inline vec3 cross(const vec3& u, const vec3& v) {
 
 inline vec3 normalize(const vec3& v) {
     return v / v.length();
+}
+
+//generates a normalized random vector
+inline vec3 randomOnSphereNormalized() {
+    while (true) {
+        auto p = vec3::random(-1, 1);
+        auto lensq = p.length_squared();
+
+        //check if p is not the sphere origin and is inside the unit sphere
+        // 0 < (x^2 + y^2 + z^2) < 1
+        if (1e-160 < lensq && lensq <= 1)
+            return p / sqrt(lensq);
+    }
+}
+
+inline vec3 randomOnHemisphere(const vec3 normal) {
+    vec3 randomOnUnitSphere = randomOnSphereNormalized();
+
+    if (dot(randomOnUnitSphere, normal) > 0.0) // In the same hemisphere as the normal
+        return randomOnUnitSphere;
+    else
+        return -randomOnUnitSphere;
 }
 
 #endif
