@@ -3,7 +3,8 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
 
-#include "ray.h"
+#include "main.h"
+
 
 class hitRecord {
 public:
@@ -33,7 +34,7 @@ class hittable {
 		// "virtual" means that other classes can derrive from this one
 		virtual ~hittable() = default;
 
-		virtual bool hit(const ray& r, double ray_tmin, double ray_tmax, hitRecord& rec) const = 0;
+		virtual bool hit(const ray& r, interval ray_t, hitRecord& rec) const = 0;
 
 		bool quadraticEquation(double* t, double a, double b, double c) const {
 			double discriminant = (b * b) - (4 * a * c);
