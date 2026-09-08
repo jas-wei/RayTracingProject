@@ -9,37 +9,36 @@
 using std::make_shared;
 using std::shared_ptr;
 
-class hittableList : public hittable {
-	public:
-		std::vector<shared_ptr<hittable>> objects;
+class hittable_list : public hittable {
+public:
+    std::vector<shared_ptr<hittable>> objects;
 
-		hittableList() {};
-		hittableList(shared_ptr<hittable> object) { add(object); }
+    hittable_list() {};
+    hittable_list(shared_ptr<hittable> object) { add(object); }
 
-		void add(shared_ptr<hittable> object) {
-			objects.push_back(object);
-		}
+    void add(shared_ptr<hittable> object) {
+        objects.push_back(object);
+    }
 
-        //for this ray, check if it hits anything and store the rec of the closer object
-        bool hit(const ray& ray, interval ray_t, hitRecord& rec) const override {
-            bool hitAnything = false;
-            double closestSoFar = ray_t.max;
+    //for this ray, check if it hits anything and store the rec of the closer object
+    bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+        bool hit_anything = false;
+        double closest_so_far = ray_t.max;
 
-            for (const auto& object : objects) {
-                hitRecord tempRec;
+        for (const auto& object : objects) {
+            hit_record temp_rec;
 
-                // Only accept hits closer than the closest one found so far
-                if (object->hit(ray, interval(ray_t.min, closestSoFar), tempRec)) {
-                    hitAnything = true;
+            // Only accept hits closer than the closest one found so far
+            if (object->hit(r, interval(ray_t.min, closest_so_far), temp_rec)) {
+                hit_anything = true;
 
-                    closestSoFar = tempRec.t;
-                    rec = tempRec;
-                }
+                closest_so_far = temp_rec.t;
+                rec = temp_rec;
             }
-
-            return hitAnything;
         }
+
+        return hit_anything;
+    }
 };
 
-
-#endif 
+#endif

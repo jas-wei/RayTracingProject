@@ -21,16 +21,16 @@ const double pi = 3.1415926535897932385;
 
 // Utility Functions
 
-inline double degreesToRadians(double degrees) {
+inline double degrees_to_radians(double degrees) {
     return degrees * pi / 180.0;
 }
 
-inline double getRandomDouble() {
-    return std::rand()/ (RAND_MAX + 1.0);
+inline double get_random_double() {
+    return std::rand() / (RAND_MAX + 1.0);
 }
 
-inline double getRandomDouble(double min, double max) {
-    return (max - min) * getRandomDouble() + min;
+inline double get_random_double(double min, double max) {
+    return (max - min) * get_random_double() + min;
 }
 
 

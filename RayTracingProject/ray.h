@@ -16,22 +16,22 @@ class ray
 		: orig(origin), dir(direction){}
 
 		//gets immutable reference of origin
-		const point3& getOrigin() const{
+		const point3& get_origin() const{
 			return orig;
 		}
 
 		//gets immutable reference of direction
-		const vec3& getDirection() const{ 
+		const vec3& get_direction() const{ 
 			return dir;
 		}
 
 		//sets new origin
-		void setOrigin(const point3 newOrig) {
+		void set_origin(const point3 newOrig) {
 			 orig = newOrig;
 		}
 
 		//sets new direction
-		void setDirection(const vec3 newDir) {
+		void set_direction(const vec3 newDir) {
 			dir = newDir;
 		}
 

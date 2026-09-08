@@ -2,6 +2,7 @@
 
 #include "main.h"
 #include "interval.h"
+#include "material.h"
 
 #include <iostream>
 #include <memory>
@@ -10,56 +11,56 @@
 class camera {
 public:
 	// Camera/image configuration
-	double aspectRatio = 16.0 / 9.0;
-	int imageWidth = 400;
-	double viewportHeight = 2.0;
-	point3 cameraPosition = point3(0, 0, 0);
-	double focalLength = 1.0;
+	double aspect_ratio = 16.0 / 9.0;
+	int image_width = 400;
+	double viewport_height = 2.0;
+	point3 camera_position = point3(0, 0, 0);
+	double focal_length = 1.0;
 
 	// Rendering configuration
 	int samples = 10;
-	int maxDepth = 10;
+	int max_depth = 10;
 
 	camera() = default;
 
 
-	void render(const hittable& hittableObject) {
+	void render(const hittable& hittable_object) {
 		initialize();
 
 		// PPM header
 		std::cout << "P3\n";
-		std::cout << imageWidth << ' ' << imageHeight << '\n';
+		std::cout << image_width << ' ' << image_height << '\n';
 		std::cout << "255\n";
 
 		// Traverse pixels from left-to-right, top-to-bottom
-		for (int j = 0; j < imageHeight; j++) {
+		for (int j = 0; j < image_height; j++) {
 			std::clog << "\rScanlines remaining: "
-				<< (imageHeight - j) << ' ' << std::flush;
+				<< (image_height - j) << ' ' << std::flush;
 
-			for (int i = 0; i < imageWidth; i++) {
+			for (int i = 0; i < image_width; i++) {
 
 				// Find this pixel's center in world space
-				auto pixelCenter = pixel00_loc
+				auto pixel_center = pixel00_loc
 					+ (pixel_delta_u * i)
 					+ (pixel_delta_v * j);
 
 				// Accumulate multiple random samples for anti-aliasing
-				color avgColor = color(0, 0, 0);
+				color avg_color = color(0, 0, 0);
 
 				for (int k = 0; k < samples; k++) {
-					point3 pixelSample = samplePixel(pixelCenter);
-					ray r = getRay(pixelSample);
+					point3 pixel_sample = sample_pixel(pixel_center);
+					ray r = get_ray(pixel_sample);
 
-					int currentDepth = 0;
-					color pixelColor =
-						rayColor(r, currentDepth, hittableObject);
+					int current_depth = 0;
+					color pixel_color =
+						ray_color(r, current_depth, hittable_object);
 
-					avgColor += pixelColor;
+					avg_color += pixel_color;
 				}
 
 				// Average all samples for this pixel
-				avgColor /= double(samples);
-				write_color(std::cout, avgColor);
+				avg_color /= double(samples);
+				write_color(std::cout, avg_color);
 			}
 		}
 
@@ -69,8 +70,8 @@ public:
 
 private:
 	// Values calculated from the public camera configuration
-	int imageHeight = 225;
-	double viewportWidth = 3.556;
+	int image_height = 225;
+	double viewport_width = 3.556;
 
 	vec3 pixel_delta_u;
 	vec3 pixel_delta_v;
@@ -79,25 +80,25 @@ private:
 
 	void initialize() {
 		// Calculate image dimensions
-		imageHeight = int(imageWidth / aspectRatio);
-		if (imageHeight < 1)
-			imageHeight = 1;
+		image_height = int(image_width / aspect_ratio);
+		if (image_height < 1)
+			image_height = 1;
 
 		// Match viewport proportions to the actual image proportions
-		viewportWidth =
-			viewportHeight * (double(imageWidth) / imageHeight);
+		viewport_width =
+			viewport_height * (double(image_width) / image_height);
 
 		// World-space viewport directions
-		vec3 viewport_u = vec3(viewportWidth, 0, 0); //don't want unit vectors here
-		vec3 viewport_v = vec3(0, -viewportHeight, 0);
+		vec3 viewport_u = vec3(viewport_width, 0, 0); //don't want unit vectors here
+		vec3 viewport_v = vec3(0, -viewport_height, 0);
 
 		// Distance between neighboring pixels
-		pixel_delta_u = viewport_u * (double(1) / imageWidth);
-		pixel_delta_v = viewport_v * (double(1) / imageHeight);
+		pixel_delta_u = viewport_u * (double(1) / image_width);
+		pixel_delta_v = viewport_v * (double(1) / image_height);
 
 		// Find viewport's upper-left corner
-		auto viewport_upper_left = cameraPosition
-			- vec3(0, 0, focalLength)
+		auto viewport_upper_left = camera_position
+			- vec3(0, 0, focal_length)
 			- viewport_u / 2
 			- viewport_v / 2;
 
@@ -109,63 +110,62 @@ private:
 
 
 	// Select a random sample within the area surrounding a pixel center
-	point3 samplePixel(const point3& pixelCenter) const {
-		double randomU = getRandomDouble(-0.5, 0.5);
-		double randomV = getRandomDouble(-0.5, 0.5);
+	point3 sample_pixel(const point3& pixel_center) const {
+		double random_u = get_random_double(-0.5, 0.5);
+		double random_v = get_random_double(-0.5, 0.5);
 
-		return pixelCenter
-			+ randomU * pixel_delta_u
-			+ randomV * pixel_delta_v;
+		return pixel_center
+			+ random_u * pixel_delta_u
+			+ random_v * pixel_delta_v;
 	}
 
 
 	// Create a ray from the camera through a sampled viewport position
-	ray getRay(const point3& pixelSample) const {
-		auto rayDirection = pixelSample - cameraPosition;
-		return ray(cameraPosition, rayDirection);
+	ray get_ray(const point3& pixel_sample) const {
+		auto ray_direction = pixel_sample - camera_position;
+		return ray(camera_position, ray_direction);
 	}
 
 
-	color rayColor(
+	color ray_color(
 		const ray& r,
-		int& currentDepth,
-		const hittable& hittableObject
+		int& current_depth,
+		const hittable& hittable_object
 	) const {
 
 		// Stop recursively bouncing once the maximum depth is reached
-		if (currentDepth == maxDepth)
+		if (current_depth == max_depth)
 			return color(0, 0, 0);
 
-		hitRecord closesetSphereHitRecord;
+		hit_record rec;
 
-		bool isHit = hittableObject.hit(
-			r,
-			interval(0.001, std::numeric_limits<double>::infinity()),
-			closesetSphereHitRecord
-		);
+		bool is_hit = hittable_object.hit( r, interval(0.001, std::numeric_limits<double>::infinity()), rec);
 
 		// check if hit point is valid and is in front of the ray orgin (camera pos)
-		if (isHit) {
-			currentDepth++;
+		if (is_hit) {
+			current_depth++;
 
-			// Generate a random bounce direction on the surface's hemisphere
-			vec3 direction = closesetSphereHitRecord.normal + randomOnSphereNormalized();
+			//containers to-be-assigned values from scatter()
+			color attenuation;
+			ray scattered;
 
-			// recursively call rayColor again (0.5 * 0.5 * ... * 0.5 * skyColor)
-			return 0.5 * rayColor(
-				ray(closesetSphereHitRecord.point, direction),
-				currentDepth,
-				hittableObject
-			);
+			//if scatter() from the material returns a valid direction
+			if (rec.mat->scatter(r, rec, attenuation, scattered)) {
+
+				// recursively call ray_color again (attenuation * ... * attenuation * sky_color)
+				return attenuation * ray_color(scattered, current_depth, hittable_object);
+			}
+
+			return color(0, 0, 0);
 		}
 
 		// output sky color if no hit detected
 		color white = color(1, 1, 1);
-		color lightBlue = color(0.5, 0.7, 1.0);
+		color light_blue = color(0.5, 0.7, 1.0);
 
-		auto a = 0.5 * (normalize(r.getDirection()).y() + 1.0);
-		auto skyColor = (1 - a) * white + a * lightBlue;
+		auto a = 0.5 * (normalize(r.get_direction()).y() + 1.0);
+		auto sky_color = (1 - a) * white + a * light_blue;
 
-		return skyColor;
+		return sky_color;
 	}
 };
