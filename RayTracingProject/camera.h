@@ -149,8 +149,7 @@ private:
 			currentDepth++;
 
 			// Generate a random bounce direction on the surface's hemisphere
-			vec3 direction =
-				randomOnHemisphere(closesetSphereHitRecord.normal);
+			vec3 direction = closesetSphereHitRecord.normal + randomOnSphereNormalized();
 
 			// recursively call rayColor again (0.5 * 0.5 * ... * 0.5 * skyColor)
 			return 0.5 * rayColor(
