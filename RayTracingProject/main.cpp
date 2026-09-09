@@ -28,8 +28,8 @@ void ray_trace() {
 	// test if the ray intersects with the sphere
 	auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
 	auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-	auto material_left = make_shared<metal>(color(0.8, 0.8, 0.8), 0.3);
-	auto material_right = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
+	auto material_left = make_shared<metal>(color(0.8, 0.8, 0.8), 0.0, 100.0, 1.0);
+	auto material_right = make_shared<metal>(color(0.8, 0.6, 0.2), 0.5, 32.0, 0.5);
 
 	hittable_list hittable_object_list;
 	hittable_object_list.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0, material_ground));
@@ -37,8 +37,20 @@ void ray_trace() {
 	hittable_object_list.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.5, material_left));
 	hittable_object_list.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, material_right));
 
+	//light
+	auto light_source = make_shared<point_light>();
 
-	camera.render(hittable_object_list);
+	light_source->position = point3(5.0, 5.0, 0.0);
+
+	light_source->ambient_color = color(0.1, 0.1, 0.1);
+	light_source->diffuse_color = color(1.0, 1.0, 1.0);
+	light_source->specular_color = color(1.0, 1.0, 1.0);
+
+	light_source->constant = 1.0f;
+	light_source->linear = 0.09f;
+	light_source->quadratic = 0.032f;
+
+	camera.render(hittable_object_list, *light_source);
 }
 
 

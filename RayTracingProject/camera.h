@@ -3,6 +3,7 @@
 #include "main.h"
 #include "interval.h"
 #include "material.h"
+#include "light.h"
 
 #include <iostream>
 #include <memory>
@@ -24,7 +25,7 @@ public:
 	camera() = default;
 
 
-	void render(const hittable& hittable_object) {
+	void render(const hittable& hittable_object, const light& light_source) {
 		initialize();
 
 		// PPM header
@@ -53,7 +54,7 @@ public:
 
 					int current_depth = 0;
 					color pixel_color =
-						ray_color(r, current_depth, hittable_object);
+						ray_color(r, current_depth, hittable_object, light_source);
 
 					avg_color += pixel_color;
 				}
@@ -127,10 +128,33 @@ private:
 	}
 
 
+	color blin_phong(const light& light_source, const hit_record& rec, const vec3& view_dir, const vec3& light_dir) const {
+		vec3 halfway_dir = normalize(view_dir + light_dir);
+		double attenuation = light_source.get_attenuation(rec.p);
+
+		//ambient 
+		color final_ambient = rec.mat->get_albedo() * light_source.get_ambient_color();
+
+		//diffuse
+		double diffuse_strength = std::max(0.0, dot(rec.normal, light_dir));
+		color final_diffuse = attenuation * rec.mat->get_albedo() * light_source.get_diffuse_color() * diffuse_strength;
+
+		//specular
+		color final_specular(0, 0, 0);
+		if (diffuse_strength > 0.0) { //check if light is hitting front face of object
+			double raw_specular = std::pow(std::max(dot(rec.normal, halfway_dir), 0.0), rec.mat->get_shininess());
+			final_specular = attenuation * rec.mat->get_specular() * light_source.get_specular_color() * raw_specular;
+		}
+
+		return final_ambient + final_diffuse + final_specular;
+	}
+
+
 	color ray_color(
 		const ray& r,
 		int& current_depth,
-		const hittable& hittable_object
+		const hittable& hittable_object, 
+		const light& light_source
 	) const {
 
 		// Stop recursively bouncing once the maximum depth is reached
@@ -145,18 +169,22 @@ private:
 		if (is_hit) {
 			current_depth++;
 
+			vec3 light_dir = normalize(light_source.get_position() - rec.p);
+			vec3 view_dir = -normalize(r.get_direction());
+
+			color direct = blin_phong(light_source, rec, view_dir, light_dir);
+			color indirect(0, 0, 0);
+
 			//containers to-be-assigned values from scatter()
 			color attenuation;
 			ray scattered;
 
 			//if scatter() from the material returns a valid direction
 			if (rec.mat->scatter(r, rec, attenuation, scattered)) {
-
 				// recursively call ray_color again (attenuation * ... * attenuation * sky_color)
-				return attenuation * ray_color(scattered, current_depth, hittable_object);
+				indirect = attenuation * ray_color(scattered, current_depth, hittable_object, light_source);
 			}
-
-			return color(0, 0, 0);
+			return direct + indirect;
 		}
 
 		// output sky color if no hit detected

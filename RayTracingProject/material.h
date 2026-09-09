@@ -10,6 +10,23 @@ class material {
         virtual bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const {
             return false;
         }
+
+        virtual color get_albedo() const {
+            return color(0, 0, 0);
+        }
+
+        virtual double get_fuzz() const {
+            return 0.0;
+        }
+
+        virtual double get_shininess() const {
+            return 0.0;
+        }
+
+        virtual double get_specular() const {
+            return 0.0;
+        }
+
 };
 
 class lambertian: public material {
@@ -35,21 +52,42 @@ class lambertian: public material {
 
 class metal : public material {
 public:
-    metal(const color& albedo, double fuzz) : albedo(albedo), fuzz(fuzz) {}
+    metal(const color& albedo, double fuzz, double shininess, double specular) : albedo(albedo), fuzz(fuzz), shininess(shininess), specular(specular) {}
 
     bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered) const override {
         // Basically ((p+n) + random_unit_vector()) - p
         vec3 reflected_dir = reflect(r_in.get_direction(), rec.normal);
-        point3 fuzzed_point = rec.p + reflected_dir + fuzz*random_unit_vector();
+        double clamped_fuzz = std::max(0.0, std::min(fuzz, 1.0));
+        point3 fuzzed_point = rec.p + reflected_dir + clamped_fuzz *random_unit_vector();
         scattered = ray(rec.p, fuzzed_point - rec.p);
         attenuation = albedo; //color multiplier applied to the bounced ray’s returned light
         
         return (dot(scattered.get_direction(), rec.normal) > 0);
     }
 
+    color get_albedo() const override {
+        return albedo;
+    }
+
+    double get_fuzz() const override {
+        return fuzz;
+    }
+
+    double get_shininess() const override {
+        return shininess;
+    }
+
+    virtual double get_specular() const {
+        return specular;
+    }
+
+
+
 private:
     color albedo;
     double fuzz;
+    double shininess;
+    double specular;
 };
 
 
